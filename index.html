@@ -456,6 +456,35 @@ html{-webkit-tap-highlight-color:transparent;-webkit-text-size-adjust:100%;text-
   .dock-in{border-radius:26px;padding:5px}
   .dock a{padding:9px 2px 7px;font-size:11px}
 }
+
+/* ---------- App-Shell: nur main scrollt, die Leiste bleibt stehen ---------- */
+html,body{height:100%;overflow:hidden;overscroll-behavior:none}
+:root{padding-top:0;padding-bottom:0}
+main{position:fixed;inset:0;overflow-y:auto;-webkit-overflow-scrolling:touch;overscroll-behavior-y:contain;max-width:none;margin:0;
+  padding:calc(env(safe-area-inset-top,0px) + 28px) max(20px, calc((100% - 820px) / 2)) calc(120px + env(safe-area-inset-bottom,0px))}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:15;background:color-mix(in srgb,var(--bg) 82%,transparent);-webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px)}
+@media (max-width:640px){
+  main{padding:calc(env(safe-area-inset-top,0px) + 10px) max(14px, env(safe-area-inset-right,0px)) calc(108px + env(safe-area-inset-bottom,0px)) max(14px, env(safe-area-inset-left,0px))}
+}
+/* Kopfzeile + Hinweis */
+.apphead{display:flex;align-items:center;justify-content:space-between;margin:0 2px 12px}
+.apptitle{font-size:15px;font-weight:700;letter-spacing:.02em;color:var(--muted)}
+.gear{width:40px;height:40px;border-radius:50%;border:1px solid var(--stroke);background:var(--glass-hi);color:var(--ink);display:grid;place-items:center;padding:0;cursor:pointer}
+.gear svg{width:20px;height:20px}
+.bknote{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:0 0 14px;padding:10px 10px 10px 16px;border-radius:16px;background:var(--glass-hi);border:1px solid var(--stroke);font-size:14px}
+.bknote.warn{border-color:var(--gold-stroke);background:color-mix(in srgb,var(--gold) 12%,transparent)}
+.bknote[hidden]{display:none}
+.bknote button{flex:none;border:0;border-radius:999px;padding:8px 14px;font:inherit;font-weight:700;font-size:13.5px;cursor:pointer;background:color-mix(in srgb,var(--lav-hi) 30%,transparent);color:var(--ink)}
+.bknote.warn button{background:var(--gold);color:#2A1A10}
+/* Einstellungs-Blatt */
+.sheet{margin:auto auto 0;width:100%;max-width:560px;max-height:85dvh;border:1px solid var(--stroke);border-bottom:0;border-radius:26px 26px 0 0;padding:8px 20px calc(env(safe-area-inset-bottom,0px) + 22px);background:var(--bg);color:var(--ink);box-shadow:0 -10px 40px rgba(0,0,0,.35)}
+.sheet::backdrop{background:rgba(5,2,8,.55)}
+@media (prefers-reduced-motion:no-preference){.sheet[open]{animation:shup .28s cubic-bezier(.2,.8,.2,1)}@keyframes shup{from{transform:translateY(40px);opacity:0}to{transform:none;opacity:1}}}
+.sheet-grab{width:40px;height:5px;border-radius:3px;background:var(--stroke);margin:4px auto 10px}
+.sheet-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
+.sheet-head h2{margin:0;font-size:22px;font-weight:700;letter-spacing:-.01em}
+.sheet-x{width:36px;height:36px;border-radius:50%;border:1px solid var(--stroke);background:transparent;color:var(--ink);font-size:22px;line-height:1;cursor:pointer}
+.sheet-ver{margin:16px 0 0;font-size:12px;color:var(--muted)}
 </style>
 </head>
 <body>
@@ -473,9 +502,24 @@ html{-webkit-tap-highlight-color:transparent;-webkit-text-size-adjust:100%;text-
     <path d="M84 36 C72 30 66 20 66 8 C78 12 84 24 84 36"/>
   </symbol>
 </svg>
+<dialog class="sheet" id="sheet" aria-labelledby="sht">
+  <div class="sheet-grab" aria-hidden="true"></div>
+  <div class="sheet-head"><h2 id="sht">Daten &amp; Backup</h2><button type="button" class="sheet-x" id="sheetX" aria-label="Schließen">×</button></div>
+  <p class="bkinfo" id="bkinfo"></p>
+    <div class="bkbtns">
+      <button type="button" class="vsave" id="bkexp">Backup exportieren</button>
+      <button type="button" class="bkghost" id="bkimp">Backup einspielen</button>
+      <input type="file" id="bkfile" accept="application/json,.json" class="sr">
+    </div>
+    <div class="bkconfirm" id="bkconfirm" hidden><p id="bkq"></p><div class="bkbtns"><button type="button" class="vsave" id="bkyes">Ja, ersetzen</button><button type="button" class="bkghost" id="bkno">Abbrechen</button></div></div>
+    <p class="vmsg" id="bkmsg" aria-live="polite"></p>
+  <p class="sheet-ver">App-Version 2026-11-16-2</p>
+</dialog>
 <div class="upd" id="upd" hidden><span>Neue Version verfügbar</span><button type="button" id="updbtn">Jetzt aktualisieren</button></div>
 <main>
 <div class="view" data-view="uebersicht">
+  <div class="apphead"><div class="apptitle">Unser Baby</div><button type="button" class="gear" id="gearBtn" aria-label="Daten und Backup"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg></button></div>
+  <div class="bknote" id="bknote" hidden><span id="bknotetxt"></span><button type="button" id="bknotebtn"></button></div>
   <section class="hero glass" aria-labelledby="wk">
     <svg class="leaf" aria-hidden="true"><use href="#branch"/></svg>
     <div class="hero-top">
@@ -529,18 +573,6 @@ html{-webkit-tap-highlight-color:transparent;-webkit-text-size-adjust:100%;text-
     <div class="nxhead"><h3 id="nxt">Als Nächstes</h3><a href="#aufgaben">Alle Aufgaben</a></div>
     <ul class="tasks" id="nextList"></ul>
   </section>
-
-  <section class="tile glass bkcard" aria-labelledby="bkt">
-    <div class="nxhead"><h3 id="bkt">Daten &amp; Backup</h3></div>
-    <p class="bkinfo" id="bkinfo"></p>
-    <div class="bkbtns">
-      <button type="button" class="vsave" id="bkexp">Backup exportieren</button>
-      <button type="button" class="bkghost" id="bkimp">Backup einspielen</button>
-      <input type="file" id="bkfile" accept="application/json,.json" class="sr">
-    </div>
-    <div class="bkconfirm" id="bkconfirm" hidden><p id="bkq"></p><div class="bkbtns"><button type="button" class="vsave" id="bkyes">Ja, ersetzen</button><button type="button" class="bkghost" id="bkno">Abbrechen</button></div></div>
-    <p class="vmsg" id="bkmsg" aria-live="polite"></p>
-  </section>
 </div>
 
 <div class="view" data-view="aufgaben">
@@ -587,7 +619,7 @@ html{-webkit-tap-highlight-color:transparent;-webkit-text-size-adjust:100%;text-
       <div class="vchart"><canvas id="vchart" aria-label="Verlauf"></canvas><p class="vempty" id="vempty"></p></div>
       <ul class="vlist" id="vlist"></ul>
       <button type="button" class="vmore" id="vmore" hidden></button>
-      <p class="vprivacy">Alle Werte bleiben nur auf diesem iPhone. Denk an regelmäßige Backups (Übersicht, ganz unten).</p>
+      <p class="vprivacy">Alle Werte bleiben nur auf diesem iPhone. Denk an regelmäßige Backups (Zahnrad oben auf der Übersicht).</p>
     </div>
   </section>
 </div>
@@ -1215,9 +1247,9 @@ function showView(v, scroll){
   document.querySelectorAll('.view').forEach(x => x.classList.toggle('on', x.dataset.view===v));
   document.querySelectorAll('.dock a').forEach(a => { if(a.dataset.v===v) a.setAttribute('aria-current','page'); else a.removeAttribute('aria-current'); });
   if(v==='werte' && typeof renderVChart==='function') renderVChart();
-  if(scroll) window.scrollTo(0,0);
+  if(scroll){ const mn=document.querySelector('main'); if(mn) mn.scrollTo(0,0); }
 }
-window.addEventListener('hashchange', () => showView(location.hash.slice(1), true));
+window.addEventListener('hashchange', () => { const sh=document.getElementById('sheet'); if(sh && sh.open) sh.close(); showView(location.hash.slice(1), true); });
 // ---------- Bilder: nur auf diesem Gerät (IndexedDB) ----------
 const IDB={ db:null,
   open(){ if(this.db) return Promise.resolve(this.db); return new Promise((res,rej)=>{ const r=indexedDB.open('unser-baby',1); r.onupgradeneeded=()=>{ if(!r.result.objectStoreNames.contains('images')) r.result.createObjectStore('images',{keyPath:'id'}); }; r.onsuccess=()=>{ this.db=r.result; res(this.db); }; r.onerror=()=>rej(r.error); }); },
@@ -1344,6 +1376,7 @@ function updateBackupInfo(){
   const days = last ? dayDiff(today, dOf(last)) : null;
   el.textContent = 'Alle Daten liegen nur auf diesem iPhone. ' + (last ? 'Letztes Backup: '+fmt(dOf(last))+(days>0?' (vor '+days+(days===1?' Tag)':' Tagen)'):' (heute)')+'.' : 'Noch kein Backup gemacht.');
   el.classList.toggle('warn', hasData() && (days===null || days>14));
+  updateBkNote(days);
 }
 async function exportBackup(){
   const m=document.getElementById('bkmsg');
@@ -1358,7 +1391,19 @@ async function exportBackup(){
   }catch(e){ if(e && e.name==='AbortError'){ m.textContent='Abgebrochen.'; m.className='vmsg'; return; } }
   const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download=name; document.body.append(a); a.click(); setTimeout(()=>{ URL.revokeObjectURL(a.href); a.remove(); },2000); done();
 }
+const sheet=document.getElementById('sheet');
+function openSheet(){ if(sheet.showModal) sheet.showModal(); else sheet.setAttribute('open',''); }
+function closeSheet(){ if(sheet.close) sheet.close(); else sheet.removeAttribute('open'); }
+function updateBkNote(days){
+  const n=document.getElementById('bknote'), t=document.getElementById('bknotetxt'), b=document.getElementById('bknotebtn'); if(!n) return;
+  if(!hasData()){ n.hidden=false; n.className='bknote'; t.textContent='Noch keine Daten in der App.'; b.textContent='Backup einspielen'; b.onclick=()=>{ openSheet(); document.getElementById('bkfile').click(); }; return; }
+  if(days===null || days>14){ n.hidden=false; n.className='bknote warn'; t.textContent= days===null ? 'Noch kein Backup gemacht.' : 'Letztes Backup vor '+days+' Tagen.'; b.textContent='Jetzt sichern'; b.onclick=exportBackup; return; }
+  n.hidden=true;
+}
 function initBackup(){
+  document.getElementById('gearBtn').addEventListener('click', openSheet);
+  document.getElementById('sheetX').addEventListener('click', closeSheet);
+  sheet.addEventListener('click', e=>{ if(e.target===sheet) closeSheet(); });
   const m=document.getElementById('bkmsg'), fi=document.getElementById('bkfile'), box=document.getElementById('bkconfirm');
   document.getElementById('bkexp').addEventListener('click', exportBackup);
   document.getElementById('bkimp').addEventListener('click', ()=>fi.click());
