@@ -7,7 +7,7 @@
 <meta name="theme-color" content="#FBEFF4" media="(prefers-color-scheme: light)">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-status-bar-style" content="black">
 <meta name="apple-mobile-web-app-title" content="Unser Baby">
 <meta name="format-detection" content="telephone=no">
 <link rel="apple-touch-icon" href="icon-180.png">
@@ -526,7 +526,7 @@ main{padding-bottom:calc(96px + env(safe-area-inset-bottom,0px))}
     </div>
     <div class="bkconfirm" id="bkconfirm" hidden><p id="bkq"></p><div class="bkbtns"><button type="button" class="vsave" id="bkyes">Ja, ersetzen</button><button type="button" class="bkghost" id="bkno">Abbrechen</button></div></div>
     <p class="vmsg" id="bkmsg" aria-live="polite"></p>
-  <p class="sheet-ver">App-Version 2026-11-16-3</p>
+  <p class="sheet-ver">App-Version 2026-11-17-1</p>
 </dialog>
 <div class="upd" id="upd" hidden><span>Neue Version verfügbar</span><button type="button" id="updbtn">Jetzt aktualisieren</button></div>
 <main>
@@ -1256,8 +1256,7 @@ function subscribeNames(db){
 // ---------- echte Bildschirmhöhe (iPhone-Web-App) ----------
 function fixAppHeight(){
   const standalone = window.navigator.standalone===true || window.matchMedia('(display-mode: standalone)').matches;
-  let h = window.innerHeight;
-  if(standalone && screen && screen.height){ const portrait = window.matchMedia('(orientation: portrait)').matches; h = Math.max(h, portrait ? Math.max(screen.height,screen.width) : Math.min(screen.height,screen.width)); }
+  const h = window.innerHeight; // nur den tatsächlich sichtbaren Bereich verwenden
   document.documentElement.style.setProperty('--appH', h+'px');
 }
 fixAppHeight();
