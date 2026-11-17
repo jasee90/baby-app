@@ -1,5 +1,5 @@
 // Unser Baby – Service Worker. Bei jedem Update die VERSION erhöhen.
-const VERSION = '2026-11-17-1';
+const VERSION = '2026-11-17-2';
 const CACHE = 'unser-baby-' + VERSION;
 const ASSETS = ['./', './index.html', './manifest.webmanifest', './chart.umd.js', './manrope.woff2', './icon-180.png', './icon-192.png', './icon-512.png'];
 

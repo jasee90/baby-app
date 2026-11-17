@@ -490,14 +490,14 @@ body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset
    iOS meldet im Home-Bildschirm-Modus (schwarz-transparente Statusleiste) eine um die
    Statusleiste zu kurze Fensterhöhe. Fest positionierte Elemente enden dadurch zu früh,
    die Leiste schwebt zu hoch. --appH wird per Skript auf die echte Bildschirmhöhe gesetzt. */
-main{inset:0 0 auto 0;height:var(--appH,100%)}
+main{inset:0}
 /* Leiste so tief wie möglich: unterer Rand ca. 8 pt über dem Display-Rand. Seitenabstand 16 pt,
    damit die runden Ecken der Leiste innerhalb der Display-Rundung (ca. 62 pt) bleiben. */
-.dock{bottom:calc(100% - var(--appH,100%));padding-bottom:max(6px, calc(env(safe-area-inset-bottom,0px) - 26px))}
+.dock{bottom:0;padding-bottom:max(6px, calc(env(safe-area-inset-bottom,0px) - 26px))}
 @media (max-width:640px){ .dock{width:calc(100% - 32px);padding-bottom:max(6px, calc(env(safe-area-inset-bottom,0px) - 26px))} .dock-in{padding:4px;border-radius:26px} .dock a{padding:8px 2px 6px;border-radius:22px} }
 main{padding-bottom:calc(96px + env(safe-area-inset-bottom,0px))}
-.sheet{inset:auto 0 calc(100% - var(--appH,100%)) 0;margin:0 auto}
-.lb{top:0;bottom:auto;height:var(--appH,100dvh);max-height:var(--appH,100dvh)}
+.sheet{inset:auto 0 0 0;margin:0 auto}
+.lb{inset:0;height:100%;max-height:100%}
 </style>
 </head>
 <body>
@@ -526,7 +526,7 @@ main{padding-bottom:calc(96px + env(safe-area-inset-bottom,0px))}
     </div>
     <div class="bkconfirm" id="bkconfirm" hidden><p id="bkq"></p><div class="bkbtns"><button type="button" class="vsave" id="bkyes">Ja, ersetzen</button><button type="button" class="bkghost" id="bkno">Abbrechen</button></div></div>
     <p class="vmsg" id="bkmsg" aria-live="polite"></p>
-  <p class="sheet-ver">App-Version 2026-11-17-1</p>
+  <p class="sheet-ver">App-Version 2026-11-17-2</p>
 </dialog>
 <div class="upd" id="upd" hidden><span>Neue Version verfügbar</span><button type="button" id="updbtn">Jetzt aktualisieren</button></div>
 <main>
