@@ -485,6 +485,19 @@ body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset
 .sheet-head h2{margin:0;font-size:22px;font-weight:700;letter-spacing:-.01em}
 .sheet-x{width:36px;height:36px;border-radius:50%;border:1px solid var(--stroke);background:transparent;color:var(--ink);font-size:22px;line-height:1;cursor:pointer}
 .sheet-ver{margin:16px 0 0;font-size:12px;color:var(--muted)}
+
+/* ---------- iPhone-Web-App: volle Bildschirmhöhe nutzen ----------
+   iOS meldet im Home-Bildschirm-Modus (schwarz-transparente Statusleiste) eine um die
+   Statusleiste zu kurze Fensterhöhe. Fest positionierte Elemente enden dadurch zu früh,
+   die Leiste schwebt zu hoch. --appH wird per Skript auf die echte Bildschirmhöhe gesetzt. */
+main{inset:0 0 auto 0;height:var(--appH,100%)}
+/* Leiste so tief wie möglich: unterer Rand ca. 8 pt über dem Display-Rand. Seitenabstand 16 pt,
+   damit die runden Ecken der Leiste innerhalb der Display-Rundung (ca. 62 pt) bleiben. */
+.dock{bottom:calc(100% - var(--appH,100%));padding-bottom:max(6px, calc(env(safe-area-inset-bottom,0px) - 26px))}
+@media (max-width:640px){ .dock{width:calc(100% - 32px);padding-bottom:max(6px, calc(env(safe-area-inset-bottom,0px) - 26px))} .dock-in{padding:4px;border-radius:26px} .dock a{padding:8px 2px 6px;border-radius:22px} }
+main{padding-bottom:calc(96px + env(safe-area-inset-bottom,0px))}
+.sheet{inset:auto 0 calc(100% - var(--appH,100%)) 0;margin:0 auto}
+.lb{top:0;bottom:auto;height:var(--appH,100dvh);max-height:var(--appH,100dvh)}
 </style>
 </head>
 <body>
@@ -513,7 +526,7 @@ body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset
     </div>
     <div class="bkconfirm" id="bkconfirm" hidden><p id="bkq"></p><div class="bkbtns"><button type="button" class="vsave" id="bkyes">Ja, ersetzen</button><button type="button" class="bkghost" id="bkno">Abbrechen</button></div></div>
     <p class="vmsg" id="bkmsg" aria-live="polite"></p>
-  <p class="sheet-ver">App-Version 2026-11-16-2</p>
+  <p class="sheet-ver">App-Version 2026-11-16-3</p>
 </dialog>
 <div class="upd" id="upd" hidden><span>Neue Version verfügbar</span><button type="button" id="updbtn">Jetzt aktualisieren</button></div>
 <main>
@@ -1240,6 +1253,17 @@ function subscribeNames(db){
   }, ()=>{});
 }
 
+// ---------- echte Bildschirmhöhe (iPhone-Web-App) ----------
+function fixAppHeight(){
+  const standalone = window.navigator.standalone===true || window.matchMedia('(display-mode: standalone)').matches;
+  let h = window.innerHeight;
+  if(standalone && screen && screen.height){ const portrait = window.matchMedia('(orientation: portrait)').matches; h = Math.max(h, portrait ? Math.max(screen.height,screen.width) : Math.min(screen.height,screen.width)); }
+  document.documentElement.style.setProperty('--appH', h+'px');
+}
+fixAppHeight();
+window.addEventListener('resize', fixAppHeight);
+window.addEventListener('orientationchange', () => setTimeout(fixAppHeight, 250));
+
 // ---------- Bereiche ----------
 const VIEWS=['uebersicht','aufgaben','werte','namen','bilder'];
 function showView(v, scroll){
@@ -1261,8 +1285,11 @@ const IDB={ db:null,
 };
 let gImgs=[], lbIdx=0, lbArmed=false;
 const gSort=(a,b)=> a.date<b.date?-1:a.date>b.date?1:(a.createdAt||0)-(b.createdAt||0);
+const SEED_IMAGES=[]; /*SEED*/
 async function loadGallery(){
-  try{ gImgs=(await IDB.all()).sort(gSort); }catch(e){ gImgs=[]; setNote('Die Bilder konnten nicht geladen werden.', true); }
+  let stored=[]; try{ stored=await IDB.all(); }catch(e){ setNote('Die Bilder konnten nicht geladen werden.', true); }
+  const byId=new Map(SEED_IMAGES.map(x=>[x.id,x])); stored.forEach(x=>byId.set(x.id,x));
+  gImgs=[...byId.values()].filter(x=>!x.deleted && x.src && x.date).sort(gSort);
   renderGallery(); updateBackupInfo();
 }
 function makeCap(im,i){
@@ -1347,7 +1374,8 @@ document.getElementById('lbrot').addEventListener('click', async () => {
 lbDel.addEventListener('click', async () => {
   const im=gImgs[lbIdx]; if(!im) return;
   if(!lbArmed){ lbArmed=true; lbDel.classList.add('armed'); lbDel.textContent='Wirklich löschen?'; setTimeout(()=>{ if(lbArmed){ lbArmed=false; lbDel.classList.remove('armed'); lbDel.textContent='Löschen'; } },4000); return; }
-  await IDB.del(im.id); gImgs.splice(lbIdx,1); renderGallery(); updateBackupInfo();
+  if(SEED_IMAGES.some(x=>x.id===im.id)) await IDB.put({id:im.id, deleted:true}); else await IDB.del(im.id);
+  gImgs.splice(lbIdx,1); renderGallery(); updateBackupInfo();
   if(!gImgs.length) lbClose(); else lbShow(Math.min(lbIdx, gImgs.length-1),0);
 });
 let sx=null, sy=null, horiz=false;
@@ -1521,7 +1549,7 @@ document.getElementById('wNext').addEventListener('click', () => selectWeek(Math
 setNote('');
 initUpload(); initBackup(); loadGallery();
 try{ if(navigator.storage && navigator.storage.persist) navigator.storage.persist(); }catch(e){}
-if('serviceWorker' in navigator && location.protocol==='https:'){
+if('serviceWorker' in navigator && location.protocol==='https:' && !/*IS-ARTIFACT*/false){
   navigator.serviceWorker.register('sw.js').then(reg => {
     const ask = w => { const b=document.getElementById('upd'); b.hidden=false; document.getElementById('updbtn').onclick=()=>{ w.postMessage('skipWaiting'); }; };
     if(reg.waiting && navigator.serviceWorker.controller) ask(reg.waiting);
